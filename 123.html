@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARP+ Key Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 80%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>WARP+ Key Generator</h1>
+    <label for="numKeys">Enter the desired number of keys:</label>
+    <input type="number" id="numKeys" min="1" step="1" value="1">
+    <button onclick="generateKeys()">Generate</button>
+    <div id="output"></div>
+
+    <script>
+        async function generateKeys() {
+            const numKeys = parseInt(document.getElementById('numKeys').value);
+            const output = document.getElementById('output');
+            output.textContent = '';
+            let keys = [
+                "6pay4l92-5tX8Y1T0-4LR1g96A",
+            ];
+            let gkeys = [];
+
+            for (let a = 0; a < numKeys; a++) {
+                output.textContent += `<======================================WARP+ Generate======================================>\nKey is being created: ${a + 1}\n`;
+
+                try {
+                    const headers = {
+                        "CF-Client-Version": "a-6.11-2223",
+                        "Host": "api.cloudflareclient.com",
+                        "Connection": "Keep-Alive",
+                        "Accept-Encoding": "gzip",
+                        "User-Agent": "okhttp/3.12.1",
+                    };
+
+                    const client = async (endpoint, options = {}) => {
+                        const response = await fetch(`https://api.cloudflareclient.com/v0a2223${endpoint}`, options);
+                        return await response.json();
+                    };
+
+                    let r = await client('/reg', { method: 'POST', headers });
+                    const id = r.id;
+                    const license = r.account.license;
+                    const token = r.token;
+
+                    r = await client('/reg', { method: 'POST', headers });
+                    const id2 = r.id;
+                    const token2 = r.token;
+
+                    const headersPost = {
+                        "Content-Type": "application/json; charset=UTF-8",
+                        "Authorization": `Bearer ${token}`,
+                    };
+
+                    await client(`/reg/${id}`, {
+                        method: 'PATCH',
+                        headers: headersPost,
+                        body: JSON.stringify({ referrer: id2 })
+                    });
+
+                    await client(`/reg/${id2}`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Bearer ${token2}` }
+                    });
+
+                    const key = keys[Math.floor(Math.random() * keys.length)];
+
+                    await client(`/reg/${id}/account`, {
+                        method: 'PUT',
+                        headers: headersPost,
+                        body: JSON.stringify({ license: key })
+                    });
+
+                    await client(`/reg/${id}/account`, {
+                        method: 'PUT',
+                        headers: headersPost,
+                        body: JSON.stringify({ license })
+                    });
+
+                    r = await client(`/reg/${id}/account`, {
+                        method: 'GET',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+
+                    const accountType = r.account_type;
+                    const referralCount = r.referral_count;
+                    const newLicense = r.license;
+
+                    await client(`/reg/${id}`, {
+                        method: 'DELETE',
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+
+                    output.textContent += `Тип аккаунта: ${accountType}\nData allocated: ${referralCount} GB\nLicense: ${newLicense}\n\n`;
+
+                    gkeys.push(newLicense);
+
+                    if ((a + 1) % 2 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 60000));
+                    }
+                } catch (er) {
+                    output.textContent += 'Error.\n' + er + '\n';
+                }
+            }
+
+            output.textContent += '\n' + gkeys.join('\n') + '\n';
+        }
+    </script>
+</body>
+</html>
